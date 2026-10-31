@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
  * Knowledge graph. Only real relationships derived from actual stored data
  * are returned:
  *  - documents ↔ documents that share tags
- *  - documents ↔ projects they belong to
  *  - entities extracted (only when present) with their relationships
  * If there is insufficient data, we return an empty graph and the UI shows an
  * appropriate empty state — never fabricated relationships.
@@ -73,7 +72,7 @@ export async function GET(req: NextRequest) {
     arr.push(dt.document_id);
     byTag.set(tagId, arr);
   }
-  for (const grouped of byTag.values()) {
+  for (const grouped of Array.from(byTag.values())) {
     for (let i = 0; i < grouped.length; i++) {
       for (let j = i + 1; j < grouped.length; j++) {
         edges.push({
