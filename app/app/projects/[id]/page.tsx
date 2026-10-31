@@ -9,6 +9,12 @@ import StatusBadge from "@/components/app/StatusBadge";
 import EmptyState from "@/components/app/EmptyState";
 import { timeAgo } from "@/lib/utils";
 
+function unnest<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (value && typeof value === "object") return [value as T];
+  return [];
+}
+
 export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
   const user = await requireUser();
   const workspaceId = await getWorkspaceId(user.id);
@@ -25,7 +31,7 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
     .from("project_documents")
     .select("documents(id, title, file_type, status, created_at)")
     .eq("project_id", params.id);
-  const docs: Doc[] = (docRows ?? []).map((r) => r.documents).filter(Boolean);
+  const docs = (docRows ?? []).flatMap((r) => unnest<Doc>(r.documents));
 
   const { data: notes } = await supabase
     .from("notes")
