@@ -15,7 +15,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { Reveal } from ".";
+import Reveal from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -35,7 +35,7 @@ const LIBRARY = [
   { type: "PDF", name: "Attention Is All You Need", meta: "Vaswani et al. · 2017", chip: "Summarized" },
   { type: "PDF", name: "Scaling Laws for Neural LMs", meta: "Kaplan et al. · 2020", chip: "In workspace" },
   { type: "PDF", name: "A Survey of Transformer Architectures", meta: "Lin et al. · 2021", chip: "Summarized" },
-  { type: "URL", name: "Anthropic — Constitutional AI post", meta: "Web page · saved today", chip: "Indexed" },
+  { type: "URL", name: "Constitutional AI — introductory post", meta: "Web page · saved today", chip: "Indexed" },
   { type: "DOC", name: "Literature review notes · Week 4", meta: "Your note", chip: "Generated" },
   { type: "PDF", name: "Emergent Abilities of LLMs", meta: "Wei et al. · 2022", chip: "New" },
 ];
@@ -344,7 +344,7 @@ export default function Showcase() {
                       isActive ? "bg-violet/25 text-violet-soft ring-1 ring-violet/40" : "text-muted/70",
                     )}
                   >
-                    <Icon className="h-4.5 w-4.5" />
+                    <Icon className="h-4 w-4" />
                   </span>
                 ))}
               </div>
@@ -352,7 +352,11 @@ export default function Showcase() {
               {/* Main */}
               <div className="min-w-0 flex-1 p-5 sm:p-6">
                 {/* Tabs */}
-                <div role="tablist" aria-label="Product views" className="mb-6 flex max-w-full gap-1 overflow-x-auto rounded-full border border-white/[0.07] bg-white/[0.02] p-1">
+                <div
+                  role="tablist"
+                  aria-label="Product views"
+                  className="mb-6 flex max-w-full gap-1 overflow-x-auto rounded-full border border-white/[0.07] bg-white/[0.02] p-1"
+                >
                   {TABS.map((tab) => {
                     const selected = active === tab.id;
                     return (
