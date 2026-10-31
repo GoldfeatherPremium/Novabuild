@@ -57,9 +57,12 @@ export default function FinalCTA() {
                   className="btn-primary px-8 py-4 text-[15.5px]"
                 >
                   Start exploring NOVA
-                  <ArrowRight className="h-4.5 w-4.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </motion.a>
-                <a href="#product" className="text-[14.5px] font-medium text-muted underline-offset-4 transition-colors hover:text-ink hover:underline">
+                <a
+                  href="#product"
+                  className="text-[14.5px] font-medium text-muted underline-offset-4 transition-colors hover:text-ink hover:underline"
+                >
                   Or take the product tour
                 </a>
               </motion.div>
