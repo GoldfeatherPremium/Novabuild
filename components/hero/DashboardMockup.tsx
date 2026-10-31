@@ -116,7 +116,7 @@ export default function DashboardMockup() {
           stroke="url(#flowGrad)"
           strokeWidth="1.5"
           strokeDasharray="3 7"
-          className="flow-line"
+          className="animate-flow"
           opacity="0.6"
         />
         <path
@@ -124,7 +124,7 @@ export default function DashboardMockup() {
           stroke="url(#flowGrad)"
           strokeWidth="1.5"
           strokeDasharray="3 7"
-          className="flow-line"
+          className="animate-flow"
           opacity="0.55"
         />
         <path
@@ -132,7 +132,7 @@ export default function DashboardMockup() {
           stroke="url(#flowGrad)"
           strokeWidth="1.5"
           strokeDasharray="3 7"
-          className="flow-line"
+          className="animate-flow"
           opacity="0.5"
         />
         <path
@@ -140,7 +140,7 @@ export default function DashboardMockup() {
           stroke="url(#flowGrad)"
           strokeWidth="1.5"
           strokeDasharray="3 7"
-          className="flow-line"
+          className="animate-flow"
           opacity="0.45"
         />
       </svg>
