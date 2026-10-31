@@ -28,7 +28,7 @@ export class StripeProvider implements BillingProvider {
     this.testMode = secretKey.startsWith("sk_test_");
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, body?: object): Promise<T> {
     const res = await fetch(`https://api.stripe.com/v1${path}`, {
       method,
       headers: {
@@ -81,7 +81,7 @@ export class StripeProvider implements BillingProvider {
   }
 }
 
-function flatten(obj: Record<string, unknown>): Record<string, string> {
+function flatten(obj: object): Record<string, string> {
   const out: Record<string, string> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
