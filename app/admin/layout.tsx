@@ -1,14 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
-import { LayoutDashboard, Users, Layers, BriefcaseBusiness, Settings, ShieldCheck } from "lucide-react";
-
-const NAV = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/plans", label: "Plans", icon: Layers },
-  { href: "/admin/jobs", label: "Jobs", icon: BriefcaseBusiness },
-  { href: "/admin/settings", label: "System", icon: Settings },
-];
+import { ShieldCheck } from "lucide-react";
+import AdminNav from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
@@ -28,20 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
           <Link href="/app" className="text-[13px] font-medium text-violet-soft hover:text-ink">← Back to app</Link>
         </div>
-        <nav className="flex flex-wrap gap-2 border-b border-white/[0.06] pb-4" aria-label="Admin">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors"
-              style={{}} 
-              data-active={undefined}
-            >
-              <item.icon className="h-4 w-4 text-muted" />
-              <span className="text-muted">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        <AdminNav />
         <div>{children}</div>
       </div>
     </div>
