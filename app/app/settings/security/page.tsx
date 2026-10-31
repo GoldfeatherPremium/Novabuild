@@ -6,7 +6,7 @@ import Input from "@/components/ui/Input";
 import { useToast } from "@/components/app/Toast";
 import { changeEmail, changePassword, type ActionResult } from "@/lib/auth/actions";
 
-export default function SecuritySettingsPage({ email }: { email: string }) {
+export default function SecuritySettingsPage({ email }: { email?: string }) {
   const { toast } = useToast();
   const [emailState, setEmailState] = useState<ActionResult | null>(null);
   const [pwState, setPwState] = useState<ActionResult | null>(null);
@@ -76,7 +76,7 @@ export default function SecuritySettingsPage({ email }: { email: string }) {
         <div>
           <p className="text-[14px] font-semibold text-ink">Account security</p>
           <p className="mt-1 text-[13px] leading-relaxed text-muted">
-            Sessions are managed by Supabase Auth with secure, HttpOnly cookies. Role and ownership checks always happen server-side — never on the client. Current email on file: <span className="text-ink">{email}</span>.
+            Sessions are managed by Supabase Auth with secure, HttpOnly cookies. Role and ownership checks always happen server-side — never on the client. Current email on file: <span className="text-ink">{email ?? "—"}</span>.
           </p>
         </div>
       </div>
