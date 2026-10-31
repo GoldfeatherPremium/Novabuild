@@ -352,3 +352,56 @@ export async function updatePreferences(prev: ActionResult | null, formData: For
   revalidatePath("/app/settings/preferences");
   return { ok: true };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Onboarding                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Save the in-progress onboarding fields (idempotent, enables resume). */
+export async function saveOnboarding(prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not signed in" };
+
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const profession = String(formData.get("profession") ?? "").trim();
+  const workspaceName = String(formData.get("workspaceName") ?? "").trim();
+  const workspaceDescription = String(formData.get("workspaceDescription") ?? "").trim();
+  const interests = String(formData.get("interests") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (fullName) {
+    const { error } = await supabase.from("profiles").update({ full_name: fullName, profession: profession || null, interests }).eq("id", user.id);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  if (workspaceName) {
+    const { data: memberships } = await supabase.from("workspace_members").select("workspace_id").eq("user_id", user.id).limit(1);
+    const wsId = memberships?.[0]?.workspace_id;
+    if (wsId) {
+      const { error } = await supabase
+        .from("workspaces")
+        .update({ name: workspaceName, description: workspaceDescription })
+        .eq("id", wsId);
+      if (error) return { ok: false, error: error.message };
+    }
+  }
+
+  return { ok: true };
+}
+
+/** Mark onboarding complete and go to the app. */
+export async function finishOnboarding() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  await supabase.from("profiles").update({ onboarded: true }).eq("id", user.id);
+  redirect("/app");
+}
