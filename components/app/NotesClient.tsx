@@ -10,7 +10,6 @@ import {
   Sparkles,
   Loader2,
   Check,
-  FileText,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useToast } from "@/components/app/Toast";
@@ -30,6 +29,7 @@ interface Note {
 interface DocOption {
   id: string;
   title: string;
+  status: string;
 }
 
 function Markdown({ text }: { text: string }) {
