@@ -4,17 +4,23 @@ import type { NotificationType } from "@/lib/notifications-types";
 export type { NotificationType } from "@/lib/notifications-types";
 
 /**
- * Create an in-app notification for a user. Called from server code with the
- * service role so it works inside webhook handlers too.
+ * Create an in-app notification for a user.
+ *
+ * Defaults to the cookie-authenticated client (RLS applies against the signed-in
+ * user). Callers in unsigned-in contexts (e.g. Stripe webhooks) may pass a
+ * service-role client via `client` so inserts aren't silently dropped by RLS.
  */
-export async function createNotification(input: {
-  userId: string;
-  type: NotificationType;
-  title: string;
-  body?: string;
-  data?: Record<string, unknown>;
-}) {
-  const supabase = createClient();
+export async function createNotification(
+  input: {
+    userId: string;
+    type: NotificationType;
+    title: string;
+    body?: string;
+    data?: Record<string, unknown>;
+  },
+  client?: ReturnType<typeof createClient>
+) {
+  const supabase = client ?? createClient();
   const { error } = await supabase.from("notifications").insert({
     user_id: input.userId,
     type: input.type,
