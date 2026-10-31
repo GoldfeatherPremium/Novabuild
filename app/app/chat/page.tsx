@@ -5,13 +5,19 @@ import ChatClient, { type ConversationItem, type DocItem, type MessageItem } fro
 
 export const dynamic = "force-dynamic";
 
+/** Normalize a to-many foreign-row (array or single object). */
+function unnest<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (value && typeof value === "object") return [value as T];
+  return [];
+}
+
 export default async function ChatPage({ searchParams }: { searchParams: { c?: string; docs?: string } }) {
   const user = await requireUser();
   const workspaceId = await getWorkspaceId(user.id);
   const supabase = createClient();
 
   const activeId = searchParams.c || null;
-  const preSelectedDoc = searchParams.docs || null;
 
   const [convosRes, docsRes] = await Promise.all([
     supabase
@@ -55,9 +61,7 @@ export default async function ChatPage({ searchParams }: { searchParams: { c?: s
       model: m.model,
       created_at: m.created_at,
     }));
-    activeDocs = (convDocsRes.data ?? [])
-      .map((r) => r.documents)
-      .filter(Boolean) as DocItem[];
+    activeDocs = (convDocsRes.data ?? []).flatMap((r) => unnest<DocItem>(r.documents));
   }
 
   return (
