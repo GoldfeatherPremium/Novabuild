@@ -20,18 +20,12 @@ import { staggerContainer, fadeUpItem, viewportOnce } from "@/lib/motion";
 function Card({
   children,
   className,
-  delay = 0,
 }: {
   children: React.ReactNode;
   className?: string;
-  delay?: number;
 }) {
   return (
-    <motion.div
-      variants={fadeUpItem}
-      className="h-full"
-      style={{ transitionDelay: `${delay}ms` }}
-    >
+    <motion.div variants={fadeUpItem} className="h-full">
       <div
         className={`card-hover group relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-white/[0.015] p-6 ${className ?? ""}`}
       >
@@ -79,7 +73,10 @@ function DocIntelligenceVisual() {
           <div className="h-1 w-8 rounded-full bg-white/[0.25]" />
           <div className="h-1 w-10 rounded-full bg-white/[0.15]" />
           <div className="h-1 w-9 rounded-full bg-white/[0.15]" />
-          <div className="mt-auto h-1.5 w-full rounded-full bg-gradient-to-r from-violet to-electric" />
+          <div
+            className="mt-auto h-1.5 w-full rounded-full bg-gradient-to-r from-violet to-electric animate-shimmer"
+            style={{ backgroundSize: "200% 100%" }}
+          />
         </div>
       </div>
 
@@ -256,9 +253,9 @@ function NoteVisual() {
 
 function WorkspaceVisual() {
   const panes = [
-    { label: "Bibliography", w: "w-1/3", h: "h-24", offset: "rotate-2 translate-y-2" },
-    { label: "Notes", w: "w-1/3", h: "h-28", offset: "-rotate-1 translate-y-1" },
-    { label: "Chat", w: "w-1/3", h: "h-24", offset: "rotate-1 translate-y-3" },
+    { label: "Bibliography", h: "h-24", offset: "rotate-2 translate-y-2" },
+    { label: "Notes", h: "h-28", offset: "-rotate-1 translate-y-1" },
+    { label: "Chat", h: "h-24", offset: "rotate-1 translate-y-3" },
   ];
   return (
     <div className="mt-6 flex flex-1 items-end gap-2.5">
