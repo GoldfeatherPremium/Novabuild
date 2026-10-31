@@ -46,6 +46,8 @@ export function chunkText(
     }
 
     if (cut <= start) break; // safety
+    if (cut >= text.length) break; // consumed everything — stop here
+
     start = Math.max(cut - overlap, start + 1);
   }
 
