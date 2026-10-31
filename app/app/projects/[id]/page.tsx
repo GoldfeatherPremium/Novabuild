@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FolderKanban, FileText, ArrowLeft, MessageSquareText, NotebookPen, Plus } from "lucide-react";
+import { FolderKanban, FileText, ArrowLeft, MessageSquareText, NotebookPen } from "lucide-react";
 import { requireUser } from "@/lib/auth/guards";
 import { getWorkspaceId } from "@/lib/app-data";
 import { createClient } from "@/lib/supabase/server";
@@ -81,14 +81,10 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        {/* Documents */}
         <div className="panel p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-[15px] font-semibold text-ink">
-              <FileText className="h-4 w-4 text-violet-soft" /> Documents · {docs.length}
-            </h2>
-            <button type="button" onClick={() => /* handled by client */ null} className="hidden" aria-hidden />
-          </div>
+          <h2 className="mb-4 flex items-center gap-2 text-[15px] font-semibold text-ink">
+            <FileText className="h-4 w-4 text-violet-soft" /> Documents · {docs.length}
+          </h2>
           {docs.length === 0 ? (
             <EmptyState icon={FileText} title="No documents yet" description="Attach documents from your library to this project." />
           ) : (
@@ -99,29 +95,15 @@ export default async function ProjectDetailPage({ params }: { params: { id: stri
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03]">
                       <FileText className="h-4 w-4 text-muted" />
                     </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13.5px] font-medium text-ink hover:text-violet-soft">{d.title}</span>
-                    </span>
+                    <span className="truncate text-[13.5px] font-medium text-ink hover:text-violet-soft">{d.title}</span>
                   </Link>
                   <StatusBadge status={d.status} />
                 </li>
               ))}
             </ul>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              const close = document.querySelector("[data-attach-trigger]");
-              void close;
-              window.dispatchEvent(new CustomEvent("nova:attach-docs"));
-            }}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-full border border-white/10 py-2.5 text-[13px] font-semibold text-ink transition-colors hover:border-violet/40 hover:bg-violet/10 hover:text-violet-soft"
-          >
-            <Plus className="h-4 w-4" /> Add documents
-          </button>
         </div>
 
-        {/* Notes + conversations */}
         <div className="flex flex-col gap-6">
           <div className="panel p-6">
             <div className="mb-4 flex items-center justify-between">
