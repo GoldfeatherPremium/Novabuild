@@ -18,16 +18,17 @@ export async function POST(req: NextRequest) {
   }
 
   const body = (await req.json().catch(() => ({}))) as { planId?: string; interval?: "month" | "year" };
-  const planId = body.planId;
-  if (!["pro", "team"].includes(planId ?? "")) {
+  const planId: "pro" | "team" | null =
+    body.planId === "pro" ? "pro" : body.planId === "team" ? "team" : null;
+  if (!planId) {
     return NextResponse.json({ error: "invalid plan" }, { status: 400 });
   }
 
-  const interval = body.interval ?? "month";
+  const interval = body.interval === "year" ? "year" : "month";
 
   const envKey = (planId === "pro" ? "BILLING_PRICE_PRO_" : "BILLING_PRICE_TEAM_") +
     (interval === "year" ? "YEARLY" : "MONTHLY");
-  const priceId = process.env[envKey];
+  const priceId: string | undefined = process.env[envKey];
   if (!priceId) {
     return NextResponse.json({ error: "BILLING_PRICE_MISSING", envKey }, { status: 503 });
   }
