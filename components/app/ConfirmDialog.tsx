@@ -11,6 +11,7 @@ export default function ConfirmDialog({
   description,
   confirmLabel = "Delete",
   danger,
+  children,
 }: {
   open: boolean;
   onClose: () => void;
@@ -19,10 +20,12 @@ export default function ConfirmDialog({
   description?: string;
   confirmLabel?: string;
   danger?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <Modal open={open} onClose={onClose} title={title}>
       {description && <p className="text-[14px] leading-relaxed text-muted">{description}</p>}
+      {children}
       <div className="mt-6 flex justify-end gap-3">
         <button
           type="button"
