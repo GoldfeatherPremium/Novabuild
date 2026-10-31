@@ -46,11 +46,15 @@ const config: Config = {
           "0%, 100%": { opacity: "0.4" },
           "50%": { opacity: "1" },
         },
+        novaFlow: {
+          to: { strokeDashoffset: "-140" },
+        },
       },
       animation: {
         marquee: "marquee 42s linear infinite",
         shimmer: "shimmer 3.5s linear infinite",
         "pulse-soft": "pulseSoft 3s ease-in-out infinite",
+        flow: "novaFlow 5.5s linear infinite",
       },
     },
   },
