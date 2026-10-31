@@ -73,7 +73,7 @@ export async function answerQuestion(input: {
 
   const messages: ChatMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
-    ...input.history.slice(-8),
+    ...(input.history?.slice(-8) ?? []),
     {
       role: "user",
       content: `Context:\n${contextBlock}\n\nQuestion: ${input.question}\n\nAnswer with inline citation markers [n].`,
