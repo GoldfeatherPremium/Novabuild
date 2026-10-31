@@ -1,16 +1,13 @@
 "use client";
 
-import { motion } from "motion/react";
-import type { AnchorHTMLAttributes, ReactNode } from "react";
+import { motion, type HTMLMotionProps } from "motion/react";
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "ghost" | "link";
 
-interface ButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
-  children: ReactNode;
+interface ButtonProps extends HTMLMotionProps<"a"> {
   variant?: Variant;
   size?: "md" | "lg";
-  className?: string;
 }
 
 export default function Button({
