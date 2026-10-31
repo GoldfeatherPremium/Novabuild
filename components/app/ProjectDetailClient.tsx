@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Archive, ArchiveRestore, Trash2, Plus, X, Loader2, FileText, MessageSquareText, NotebookPen } from "lucide-react";
+import { Pencil, Archive, ArchiveRestore, Trash2, Plus, Loader2, FileText } from "lucide-react";
 import Modal from "@/components/app/Modal";
 import ConfirmDialog from "@/components/app/ConfirmDialog";
 import Input from "@/components/ui/Input";
@@ -43,6 +43,12 @@ export default function ProjectDetailClient({
   const [busy, setBusy] = useState(false);
 
   const notAttached = availableDocs.filter((d) => !docs.some((x) => x.id === d.id));
+
+  useEffect(() => {
+    const handler = () => setAttachOpen(true);
+    window.addEventListener("nova:attach-docs", handler);
+    return () => window.removeEventListener("nova:attach-docs", handler);
+  }, []);
 
   async function save() {
     if (!name.trim()) return;
@@ -91,12 +97,6 @@ export default function ProjectDetailClient({
     router.refresh();
   }
 
-  async function removeDoc(id: string) {
-    await fetch(`/api/projects/${projectId}/documents?documentId=${id}`, { method: "DELETE" });
-    toast("Document removed from project", "success");
-    router.refresh();
-  }
-
   async function removeProject() {
     setBusy(true);
     const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
@@ -114,6 +114,9 @@ export default function ProjectDetailClient({
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => { setEditOpen(true); setName(initialName); setDescription(initialDescription); }} className="flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2.5 text-[13px] font-medium text-ink hover:bg-white/5">
           <Pencil className="h-4 w-4" /> Edit
+        </button>
+        <button type="button" onClick={() => setAttachOpen(true)} className="flex items-center gap-1.5 rounded-full border border-violet/30 bg-violet/10 px-4 py-2.5 text-[13px] font-medium text-violet-soft hover:bg-violet/20">
+          <Plus className="h-4 w-4" /> Add documents
         </button>
         <button type="button" onClick={toggleArchive} disabled={busy} className="flex items-center gap-1.5 rounded-full border border-white/10 px-4 py-2.5 text-[13px] font-medium text-ink hover:bg-white/5">
           {initialArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
