@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { publicConfig } from "@/lib/env-public";
 import { billingConfig } from "@/lib/env";
 import { createNotification } from "@/lib/notifications";
+import { MAX_WEBHOOK_AGE_SECONDS, isEventFresh, verifyStripeSignature } from "@/lib/billing/webhook";
 
 const ALLOWED_PLANS = ["free", "pro", "team"];
-const MAX_WEBHOOK_AGE_SECONDS = 5 * 60;
 
 /**
  * Stripe webhook handler (TEST MODE until production keys are configured).
  *
  * Security:
- *  - signature verified with the webhook secret (HMAC-SHA256)
+ *  - signature verified with the webhook secret (HMAC-SHA256, timing-safe)
  *  - timestamp freshness enforced (replays rejected)
  *  - events processed idempotently (payment_transactions.provider_transaction_id
  *    unique; duplicate events short-circuit)
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
   const raw = await req.text();
   const signature = req.headers.get("stripe-signature") ?? "";
 
-  if (!verifySignature(raw, signature, cfg.webhookSecret)) {
+  if (!verifyStripeSignature(raw, signature, cfg.webhookSecret)) {
     return NextResponse.json({ error: "invalid signature" }, { status: 400 });
   }
 
@@ -48,8 +47,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Replay protection: reject events older than the freshness window.
-  const ageSeconds = (Date.now() / 1000) - (event.created ?? 0);
-  if (Number.isNaN(ageSeconds) || ageSeconds > MAX_WEBHOOK_AGE_SECONDS) {
+  if (!isEventFresh(event.created ?? Number.NaN, MAX_WEBHOOK_AGE_SECONDS)) {
     return NextResponse.json({ error: "event too old" }, { status: 400 });
   }
 
@@ -217,25 +215,6 @@ export async function POST(req: NextRequest) {
       { error: err instanceof Error ? err.message : "webhook processing failed" },
       { status: 500 }
     );
-  }
-}
-
-function verifySignature(payload: string, signature: string, secret: string): boolean {
-  try {
-    const parts = signature.split(",").reduce<Record<string, string>>((acc, p) => {
-      const idx = p.indexOf("=");
-      if (idx === -1) return acc;
-      acc[p.slice(0, idx)] = p.slice(idx + 1);
-      return acc;
-    }, {});
-    const v1 = parts.v1 ?? "";
-    const t = parts.t ?? "";
-    if (!v1 || !t) return false;
-    const hmac = createHmac("sha256", secret).update(`${t}.${payload}`).digest();
-    const provided = Buffer.from(v1, "hex");
-    return hmac.length === provided.length && timingSafeEqual(hmac, provided);
-  } catch {
-    return false;
   }
 }
 
