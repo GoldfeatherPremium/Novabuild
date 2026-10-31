@@ -8,7 +8,7 @@ import {
   useSpring,
 } from "motion/react";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import Reveal from "@/components/ui/Reveal";
 
 /* ------------------------------------------------------------------ */
 /* Animated counter                                                     */
