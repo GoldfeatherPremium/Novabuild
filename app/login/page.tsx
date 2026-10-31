@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Suspense, useState, useTransition } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import Input from "@/components/ui/Input";
 import Checkbox from "@/components/ui/Checkbox";
 import { login, type ActionResult } from "@/lib/auth/actions";
 
-export default function LoginPage() {
+function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/app";
   const [state, setState] = useState<ActionResult | null>(null);
@@ -92,5 +92,13 @@ export default function LoginPage() {
         </button>
       </form>
     </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<AuthShell title="Welcome back" subtitle="Sign in to continue your research." />}>
+      <LoginForm />
+    </Suspense>
   );
 }
