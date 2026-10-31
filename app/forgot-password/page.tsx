@@ -33,7 +33,9 @@ export default function ForgotPasswordPage() {
             Back to sign in
           </Link>
         }
-      />
+      >
+        <></>
+      </AuthShell>
     );
   }
 
