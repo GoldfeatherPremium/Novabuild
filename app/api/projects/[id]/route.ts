@@ -21,20 +21,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .select("id, title, content, pinned, updated_at")
     .eq("project_id", params.id);
 
-  const { data: convos } = await supabase
-    .from("conversations")
-    .select("id, title, last_message_at, created_at")
-    .eq("owner_id", project.workspace_id ? "" : "") // replaced below by owner query
-    .eq("archived", false);
-
-  // Conversations belonging to this workspace (the project's workspace).
   const { data: workspaceConvos } = await supabase
     .from("conversations")
     .select("id, title, last_message_at, created_at")
     .eq("workspace_id", project.workspace_id)
     .eq("archived", false);
-
-  void convos;
 
   return NextResponse.json({
     project,
@@ -59,7 +50,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient();
-  // Unlink documents first, then delete the project.
   await supabase.from("project_documents").delete().eq("project_id", params.id);
   const { error } = await supabase.from("research_projects").delete().eq("id", params.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
