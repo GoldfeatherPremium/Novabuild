@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { integrationStatus } from "@/lib/env";
+import { integrationStatus, isSupabaseConfigured } from "@/lib/env";
 import { aiStatus } from "@/lib/ai/index";
 
 async function requireAdmin(supabase: ReturnType<typeof createClient>) {
@@ -15,6 +15,10 @@ async function requireAdmin(supabase: ReturnType<typeof createClient>) {
 
 /** System status + settings (integration health, storage check). */
 export async function GET() {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+  }
+
   const supabase = createClient();
   const admin = await requireAdmin(supabase);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -39,6 +43,10 @@ export async function GET() {
 
 /** Update a system setting (admin only). */
 export async function POST(req: NextRequest) {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+  }
+
   const supabase = createClient();
   const admin = await requireAdmin(supabase);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
