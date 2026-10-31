@@ -74,8 +74,6 @@ export async function register(
     return { ok: false, error: error.message };
   }
 
-  // If a session is created immediately (email confirmation disabled), send the
-  // user straight to onboarding.
   if (data.session) {
     redirect("/onboarding");
   }
@@ -112,8 +110,6 @@ export async function login(
   }
 
   if (remember) {
-    // Supabase sessions persist via cookies by default; "remember" extends the
-    // session lifetime configured on the Supabase project.
     void remember;
   }
 
@@ -286,8 +282,6 @@ export async function deleteAccount(prev: ActionResult | null, formData: FormDat
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Not signed in" };
 
-  // Delete user (auth.users cascade removes profile + owned records). Storage
-  // objects are removed here for a tidy wipe.
   const { data: docs } = await supabase.from("documents").select("storage_path").eq("owner_id", user.id);
   for (const doc of docs ?? []) {
     await supabase.storage.from("documents").remove([doc.storage_path]);
@@ -329,4 +323,32 @@ export async function exportData(): Promise<{ ok: boolean; data?: unknown; error
       transactions: transactions.data ?? [],
     },
   };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Preferences                                                        */
+/* ------------------------------------------------------------------ */
+
+export async function updatePreferences(prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "Not signed in" };
+
+  const theme = String(formData.get("theme") ?? "dark");
+  const language = String(formData.get("language") ?? "en");
+  const notifyEmail = formData.get("notifyEmail") === "on";
+  const aiModelPref = String(formData.get("aiModelPref") ?? "").trim();
+
+  const { error } = await supabase.from("user_preferences").upsert({
+    user_id: user.id,
+    theme: theme === "light" ? "light" : "dark",
+    language,
+    notify_email: notifyEmail,
+    ai_model_pref: aiModelPref || null,
+  });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/app/settings/preferences");
+  return { ok: true };
 }
