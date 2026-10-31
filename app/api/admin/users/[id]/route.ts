@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/env";
 
 async function requireAdmin(supabase: ReturnType<typeof createClient>) {
   const {
@@ -13,6 +14,10 @@ async function requireAdmin(supabase: ReturnType<typeof createClient>) {
 
 /** Suspend / restore / adjust credits / change role. All actions are audited. */
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+  }
+
   const supabase = createClient();
   const admin = await requireAdmin(supabase);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
