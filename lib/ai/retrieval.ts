@@ -11,6 +11,8 @@ export interface RetrievedChunk {
   sourceLabel: string;
 }
 
+type SupabaseClient = ReturnType<typeof createClient>;
+
 /**
  * Retrieval-augmented search over a workspace's documents.
  *
@@ -70,7 +72,7 @@ export async function retrieve(
 }
 
 async function keywordRetrieve(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   workspaceId: string,
   question: string,
   documentIds: string[] | undefined,
@@ -85,54 +87,46 @@ async function keywordRetrieve(
 
   if (terms.length === 0) return [];
 
-  let query = supabase
-    .from("document_chunks")
-    .select("id, document_id, content, page_hint")
-    .eq("document_id", supabase.from("documents").select("id").eq("workspace_id", workspaceId)) // placeholder replaced below
-    .limit(2000);
-
-  // NOTE: the placeholder select above is replaced by the explicit join query
-  // below for clarity/correctness.
   const { data: docRows } = await supabase
     .from("documents")
     .select("id, title")
-    .eq("workspace_id", workspaceId)
-    .in("id", documentIds?.length ? documentIds : [""]);
+    .eq("workspace_id", workspaceId);
 
-  void query;
-  const allowedIds = documentIds?.length ? documentIds : (docRows ?? []).map((d) => d.id);
+  const docLookup = new Map((docRows ?? []).map((d) => [d.id, d.title]));
+  const allowedIds = documentIds?.length ? documentIds : [...docLookup.keys()];
+  if (allowedIds.length === 0) return [];
 
   const { data: chunks, error } = await supabase
     .from("document_chunks")
     .select("id, document_id, content, page_hint")
-    .in("document_id", allowedIds.length ? allowedIds : [""])
+    .in("document_id", allowedIds)
     .limit(4000);
 
   if (error || !chunks) return [];
 
+  const loweredQuestion = question.toLowerCase();
   const scored = chunks
+    .filter((c) => allowedIds.includes(c.document_id))
     .map((c) => {
       const text = c.content.toLowerCase();
       let score = 0;
       for (const t of terms) {
         if (text.includes(t)) score += 1;
-        // bonus for exact phrase proximity
-        if (text.includes(question.toLowerCase())) score += 3;
       }
+      if (loweredQuestion && text.includes(loweredQuestion)) score += 3;
       return { chunk: c, score };
     })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
-  const titleMap = new Map((docRows ?? []).map((d) => [d.id, d.title]));
   return scored.map(({ chunk }) => ({
     chunkId: chunk.id,
     documentId: chunk.document_id,
-    documentTitle: titleMap.get(chunk.document_id) ?? "Document",
+    documentTitle: docLookup.get(chunk.document_id) ?? "Document",
     content: chunk.content,
     pageHint: chunk.page_hint,
     similarity: null,
-    sourceLabel: titleMap.get(chunk.document_id) ?? "Document",
+    sourceLabel: docLookup.get(chunk.document_id) ?? "Document",
   }));
 }
