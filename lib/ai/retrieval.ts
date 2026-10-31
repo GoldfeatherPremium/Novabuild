@@ -93,7 +93,7 @@ async function keywordRetrieve(
     .eq("workspace_id", workspaceId);
 
   const docLookup = new Map((docRows ?? []).map((d) => [d.id, d.title]));
-  const allowedIds = documentIds?.length ? documentIds : [...docLookup.keys()];
+  const allowedIds = documentIds?.length ? documentIds : Array.from(docLookup.keys());
   if (allowedIds.length === 0) return [];
 
   const { data: chunks, error } = await supabase
