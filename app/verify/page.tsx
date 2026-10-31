@@ -69,7 +69,7 @@ function VerifyInner() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<AuthShell title="Verifying…" />}>
+    <Suspense fallback={<AuthShell title="Verifying…"><div className="min-h-[240px]" /></AuthShell>}>
       <VerifyInner />
     </Suspense>
   );
