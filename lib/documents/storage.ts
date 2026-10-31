@@ -29,20 +29,18 @@ export function makeStoragePath(userId: string, filename: string): string {
   return `${userId}/${randomUUID()}/${safe}`;
 }
 
-export async function createSignedUploadUrl(userId: string, filename: string, contentType: string) {
+export async function createSignedUploadUrl(userId: string, filename: string, _contentType: string) {
   const supabase = serviceClient();
   const path = makeStoragePath(userId, filename);
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path, {
-    contentType,
-  });
-  if (error) throw new Error(error.message);
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error || !data) throw new Error(error?.message ?? "Failed to create upload URL");
   return { path, url: data.signedUrl, token: data.token };
 }
 
 export async function createSignedDownloadUrl(path: string) {
   const supabase = serviceClient();
   const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, 3600);
-  if (error) throw new Error(error.message);
+  if (error || !data) throw new Error(error?.message ?? "Failed to create download URL");
   return data.signedUrl;
 }
 
@@ -55,11 +53,12 @@ export async function downloadObject(path: string) {
 
 export async function objectExists(path: string) {
   const supabase = serviceClient();
-  const { data, error } = await supabase.storage.from(BUCKET).list(path.split("/").slice(0, 2).join("/"), {
-    search: path.split("/").pop(),
-  });
+  const parts = path.split("/");
+  const folder = parts.slice(0, 2).join("/");
+  const search = parts[parts.length - 1];
+  const { data, error } = await supabase.storage.from(BUCKET).list(folder, { search });
   if (error) return false;
-  return (data ?? []).some((f) => `${path.split("/").slice(0, 2).join("/")}/${f.name}` === path);
+  return (data ?? []).some((f) => `${folder}/${f.name}` === path);
 }
 
 export async function removeObject(path: string) {
