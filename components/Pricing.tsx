@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { Reveal } from "@/components/ui/Reveal";
+import Reveal from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
 
 type Billing = "monthly" | "yearly";
