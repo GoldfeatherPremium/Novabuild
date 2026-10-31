@@ -22,10 +22,11 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
 
   if (!doc) notFound();
 
-  const { data: chunkCount } = await supabase
+  const chunkQuery = await supabase
     .from("document_chunks")
     .select("id", { count: "exact", head: true })
     .eq("document_id", params.id);
+  const chunkCount = (chunkQuery as unknown as { count: number | null }).count ?? 0;
 
   const credits = await getCreditBalance(user.id);
 
@@ -61,7 +62,7 @@ export default async function DocumentDetailPage({ params }: { params: { id: str
                   <HardDrive className="h-3.5 w-3.5" /> {formatBytes(doc.file_size)}
                 </span>
                 <span className="flex items-center gap-1 text-[12.5px] text-muted">
-                  <Layers className="h-3.5 w-3.5" /> {chunkCount.count ?? 0} chunks indexed
+                  <Layers className="h-3.5 w-3.5" /> {chunkCount} chunks indexed
                 </span>
                 <span className="flex items-center gap-1 text-[12.5px] text-muted">
                   <Calendar className="h-3.5 w-3.5" /> Uploaded {timeAgo(doc.created_at)}
