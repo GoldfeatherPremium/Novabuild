@@ -97,7 +97,13 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<AuthShell title="Welcome back" subtitle="Sign in to continue your research." />}>
+    <Suspense
+      fallback={
+        <AuthShell title="Welcome back" subtitle="Sign in to continue your research.">
+          <div className="min-h-[240px]" />
+        </AuthShell>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
