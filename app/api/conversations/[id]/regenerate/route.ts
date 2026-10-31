@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { answerQuestion } from "@/lib/ai/chat";
 import { aiStatus } from "@/lib/ai/index";
 import { spendCredits } from "@/lib/credits";
+import type { Citation } from "@/lib/ai/chat";
 
 /** Regenerate the last assistant message (same question + history). */
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -25,7 +26,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("id, role, content")
+    .select("id, role, content, citations")
     .eq("conversation_id", params.id)
     .order("created_at", { ascending: true });
 
@@ -56,31 +57,25 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       history,
     });
 
-    let finalContent = answer.content;
-    let finalCitations = answer.citations;
-    if (lastAssistant) {
-      // Secondary regenerate: keep the original on failure to avoid data loss.
-      finalContent = answer.content || lastAssistant.content;
-      finalCitations = answer.citations.length ? answer.citations : (lastAssistant.citations as never[]);
-    }
+    const prevCitations = (lastAssistant?.citations ?? []) as unknown as Citation[];
 
     if (lastAssistant) {
       await supabase.from("messages").update({
-        content: finalContent,
-        citations: finalCitations,
+        content: answer.content || lastAssistant.content,
+        citations: answer.citations.length ? answer.citations : prevCitations,
         model: answer.model,
       }).eq("id", lastAssistant.id);
     } else {
       await supabase.from("messages").insert({
         conversation_id: params.id,
         role: "assistant",
-        content: finalContent,
-        citations: finalCitations,
+        content: answer.content,
+        citations: answer.citations,
         model: answer.model,
       });
     }
 
-    return NextResponse.json({ answer: { ...answer, content: finalContent, citations: finalCitations } });
+    return NextResponse.json({ answer });
   } catch (err) {
     const message = err instanceof Error && err.message === "AI_PROVIDER_NOT_CONFIGURED"
       ? "AI_PROVIDER_NOT_CONFIGURED"
