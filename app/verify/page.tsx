@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { createClient } from "@/lib/supabase/client";
 
-export default function VerifyPage() {
+function VerifyInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -64,5 +64,13 @@ export default function VerifyPage() {
         )}
       </div>
     </AuthShell>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<AuthShell title="Verifying…" />}>
+      <VerifyInner />
+    </Suspense>
   );
 }
