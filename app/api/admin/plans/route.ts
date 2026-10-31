@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/env";
 
 async function requireAdmin(supabase: ReturnType<typeof createClient>) {
   const {
@@ -12,6 +13,10 @@ async function requireAdmin(supabase: ReturnType<typeof createClient>) {
 }
 
 export async function GET() {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+  }
+
   const supabase = createClient();
   const admin = await requireAdmin(supabase);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
@@ -26,6 +31,10 @@ export async function GET() {
 
 /** Upsert plan pricing/limits/activity. */
 export async function POST(req: NextRequest) {
+  if (!isSupabaseConfigured) {
+    return NextResponse.json({ error: "Supabase is not configured" }, { status: 503 });
+  }
+
   const supabase = createClient();
   const admin = await requireAdmin(supabase);
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
