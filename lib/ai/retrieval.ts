@@ -93,7 +93,13 @@ async function keywordRetrieve(
     .eq("workspace_id", workspaceId);
 
   const docLookup = new Map((docRows ?? []).map((d) => [d.id, d.title]));
-  const allowedIds = documentIds?.length ? documentIds : Array.from(docLookup.keys());
+
+  // Always intersect requested documentIds with the workspace-scoped set so a
+  // caller can never pull chunks from documents outside this workspace.
+  const workspaceKeys = Array.from(docLookup.keys());
+  const allowedIds = documentIds?.length
+    ? documentIds.filter((id) => workspaceKeys.includes(id))
+    : workspaceKeys;
   if (allowedIds.length === 0) return [];
 
   const { data: chunks, error } = await supabase
