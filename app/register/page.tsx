@@ -35,7 +35,9 @@ export default function RegisterPage() {
             Back to sign in
           </Link>
         }
-      />
+      >
+        <></>
+      </AuthShell>
     );
   }
 
