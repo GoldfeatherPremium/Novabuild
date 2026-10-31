@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-import { Reveal } from "@/components/ui/Reveal";
+import Reveal from "@/components/ui/Reveal";
 
 export default function FinalCTA() {
   return (
