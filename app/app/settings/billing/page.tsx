@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CreditCard, Calendar, ArrowRight, Gem } from "lucide-react";
 import { requireUser } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
@@ -89,7 +90,7 @@ export default async function BillingSettingsPage() {
               ))}
             </ul>
           )}
-          <Link href="/app/settings/billing?faq=1" className="mt-3 hidden items-center gap-1 text-[12.5px] text-violet-soft hover:text-ink">
+          <Link href="/app/settings/billing" className="mt-3 hidden items-center gap-1 text-[12.5px] text-violet-soft hover:text-ink">
             How billing works <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
