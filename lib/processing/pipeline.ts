@@ -7,6 +7,7 @@ import { createNotification } from "@/lib/notifications";
 import { validateFile } from "@/lib/documents/validate";
 
 const MAX_PROCESS_SECONDS = 120;
+const MAX_CHUNKS = 4000;
 
 /**
  * Run the document processing pipeline synchronously within a request:
@@ -45,21 +46,22 @@ export async function processDocument(documentId: string): Promise<{ ok: boolean
   await supabase.from("documents").update({ status: "processing", error_message: null }).eq("id", documentId);
 
   try {
-    // 1. Download object (validates it exists).
+    // 1. Download object (validates it exists). Read the bytes ONCE.
     const buf = await downloadObject(doc.storage_path);
+    const arrayBuffer = await buf.arrayBuffer();
 
     if (Date.now() > deadline) throw new Error("Processing timeout");
 
-    // 2. Re-validate magic bytes server-side.
+    // 2. Re-validate magic bytes server-side against the REAL bytes.
     const validation = validateFile({
       name: doc.original_filename,
-      size: doc.file_size,
-      buffer: await buf.arrayBuffer(),
+      size: arrayBuffer.byteLength,
+      buffer: arrayBuffer,
     });
     if (!validation.ok) throw new Error(validation.error ?? "Invalid file");
 
     // 3. Extract text.
-    const extracted = await extractText(doc.file_type as "pdf" | "docx" | "txt", Buffer.from(await buf.arrayBuffer()));
+    const extracted = await extractText(doc.file_type as "pdf" | "docx" | "txt", Buffer.from(arrayBuffer));
 
     if (Date.now() > deadline) throw new Error("Processing timeout");
 
@@ -72,8 +74,11 @@ export async function processDocument(documentId: string): Promise<{ ok: boolean
       throw new Error("No extractable text found");
     }
 
-    // 4. Chunk.
+    // 4. Chunk (bounded).
     const chunks = chunkText(extracted.text);
+    if (chunks.length > MAX_CHUNKS) {
+      throw new Error("Document is too large to index (over 4,000 chunks)");
+    }
 
     // 5. Clear previous chunks/embeddings (idempotent re-run).
     await supabase.from("document_chunks").delete().eq("document_id", documentId);
@@ -96,6 +101,7 @@ export async function processDocument(documentId: string): Promise<{ ok: boolean
       try {
         const batch = 64;
         for (let i = 0; i < chunks.length; i += batch) {
+          if (Date.now() > deadline) throw new Error("Processing timeout");
           const slice = chunks.slice(i, i + batch);
           const embedded = await provider.embeddings({ input: slice.map((c) => c.content) });
           if (embedded.embeddings.length === slice.length) {
