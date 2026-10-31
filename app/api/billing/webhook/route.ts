@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCrypto } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
-import { billingConfig, publicConfig } from "@/lib/env-public";
-import { isSupabaseConfigured } from "@/lib/env";
+import { publicConfig } from "@/lib/env-public";
+import { billingConfig } from "@/lib/env";
 import { createNotification } from "@/lib/notifications";
 
 /**
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!cfg.configured || !cfg.webhookSecret) {
     return NextResponse.json({ error: "BILLING_WEBHOOK_NOT_CONFIGURED" }, { status: 503 });
   }
-  if (!isSupabaseConfigured) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !publicConfig.supabaseUrl) {
     return NextResponse.json({ error: "SUPABASE_NOT_CONFIGURED" }, { status: 503 });
   }
 
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  const supabase = createServiceClient(publicConfig.supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY ?? "", {
+  const supabase = createServiceClient(publicConfig.supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const obj = event.data.object;
-        const userId = String(obj.metadata?.user_id ?? "");
-        const planId = String(obj.metadata?.plan_id ?? "pro");
+        const userId = String((obj.metadata as Record<string, string> | undefined)?.user_id ?? "");
+        const planId = String((obj.metadata as Record<string, string> | undefined)?.plan_id ?? "pro");
         const customerId = String(obj.customer ?? "");
         const subId = String(obj.subscription ?? "");
         const amount = Number(obj.amount_total ?? 0);
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
               amount_cents: amount,
               currency: String(obj.currency ?? "usd"),
               status: "succeeded",
-              invoice_id: String(obj.invoice ?? null),
+              invoice_id: obj.invoice ? String(obj.invoice) : null,
               metadata: { plan_id: planId },
             });
           }
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
       }
 
       default:
-        // Acknowledge all other events (e.g. invoice.paid) without action.
+        // Acknowledge all other events without action.
         break;
     }
 
@@ -188,27 +188,21 @@ export async function POST(req: NextRequest) {
 
 function verifySignature(payload: string, signature: string, secret: string): boolean {
   try {
-    const expected = createCrypto("createHmac", "sha256").update(payload).digest("hex");
     const parts = signature.split(",").reduce<Record<string, string>>((acc, p) => {
-      const [k, v] = p.split("=");
-      acc[k] = v;
+      const idx = p.indexOf("=");
+      if (idx === -1) return acc;
+      acc[p.slice(0, idx)] = p.slice(idx + 1);
       return acc;
     }, {});
     const v1 = parts.v1 ?? "";
-    if (!v1) return false;
-    const hmac = createCrypto("createHmac", "sha256").update(`${parts.t}.${payload}`).digest("hex");
-    return timingSafeEqualHex(hmac, v1) || timingSafeEqualHex(expected, v1);
+    const t = parts.t ?? "";
+    if (!v1 || !t) return false;
+    const hmac = createHmac("sha256", secret).update(`${t}.${payload}`).digest();
+    const provided = Buffer.from(v1, "hex");
+    return hmac.length === provided.length && timingSafeEqual(hmac, provided);
   } catch {
     return false;
   }
-}
-
-function timingSafeEqualHex(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  const bufA = Buffer.from(a, "hex");
-  const bufB = Buffer.from(b, "hex");
-  if (bufA.length !== bufB.length) return false;
-  return createCrypto("timingSafeEqual", bufA, bufB);
 }
 
 function addMonths(date: Date, months: number): Date {
